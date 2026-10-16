@@ -34,3 +34,8 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 - **AI mistakes caught before running:** (1) exported `MAX_*` constants from a route file, which Next rejects as invalid route exports; made them module-private. (2) the instructions ask for markdown tables, but react-markdown needs `remark-gfm` for tables; added it (checked maintainers on npm first).
 - **Changed:** moved the API-key check after input validation so the guards can be tested without a key.
 - **Verify (no key yet):** curl shows 400 for bad JSON, 2001-char message, injected system message and 31 messages; a valid request reaches the key check (500 "not configured"). Live answers to the 3 README questions are pending an API key.
+
+## M5 — docs + full verification
+- **Outcome:** README rewritten for the submission (run steps, API table, tools table, trade-offs, security notes); the original challenge moved to `docs/CHALLENGE.md`; `AI_WORKFLOW.md` drafted from this log.
+- **Bug found only by `next build`:** prerendering `/chat` failed with `blocking-prerender-random-client` because `useChat` generates random ids during render. Typecheck, lint and dev mode all passed. Fixed with a `<Suspense>` boundary (Next's suggested fix). Takeaway: run a production build at every milestone, not only at the end.
+- **Verify:** typecheck ✓, lint ✓, 12/12 tests ✓, `next build` ✓ (`/` partial prerender, API routes dynamic).
