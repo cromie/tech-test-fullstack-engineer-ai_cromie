@@ -29,8 +29,10 @@ const toolTurn = (toolName: string, input: unknown) => [
   { type: "finish" as const, finishReason: { unified: "tool-calls" as const, raw: undefined }, usage },
 ];
 
+type Turn = (ReturnType<typeof textTurn>[number] | ReturnType<typeof toolTurn>[number])[];
+
 /** A model that plays the given turns in order (repeating the last one). */
-function scriptedModel(...turns: ReturnType<typeof textTurn>[]) {
+function scriptedModel(...turns: Turn[]) {
   let i = 0;
   return new MockLanguageModelV4({
     doStream: async () => ({ stream: simulateReadableStream({ chunks: turns[Math.min(i++, turns.length - 1)] }) }),
