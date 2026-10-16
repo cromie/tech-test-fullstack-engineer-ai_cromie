@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { GameForm } from "./GameForm";
 import { Cover, GenrePill, RevenueBar, Stars } from "./GameVisuals";
 import { StatTiles } from "./StatTiles";
 import { int } from "@/lib/format";
+import { DEFAULT_VIEW, filterAndSort, genresOf, nextSort, type SortKey, type TableView } from "@/lib/table";
 import type { Game, GameInput } from "@/lib/schema";
 
 async function request<T>(url: string, init: RequestInit): Promise<T> {
@@ -25,6 +26,12 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
   const [editing, setEditing] = useState<Game | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<TableView>(DEFAULT_VIEW);
+
+  const visible = useMemo(() => filterAndSort(games, view), [games, view]);
+  const genres = useMemo(() => genresOf(games), [games]);
+  const filtered = view.query.trim() !== "" || view.genre !== null;
+  const sortBy = (key: SortKey) => setView((v) => ({ ...v, ...nextSort(v, key) }));
 
   const maxRevenue = Math.max(0, ...games.map((g) => g.monthly_revenue_usd));
 
@@ -65,30 +72,71 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <section className="overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <h2 className="text-sm font-medium">Library</h2>
-            <span className="text-xs text-ink-3">{games.length} games</span>
+          <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="mr-auto text-sm font-medium">Library</h2>
+            <label className="relative">
+              <span className="sr-only">Search games</span>
+              <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input
+                type="search"
+                value={view.query}
+                onChange={(e) => setView((v) => ({ ...v, query: e.target.value }))}
+                placeholder="Search title or developer"
+                className="w-56 rounded-lg border border-line bg-canvas py-1.5 pl-8 pr-3 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20"
+              />
+            </label>
+            <label>
+              <span className="sr-only">Filter by genre</span>
+              <select
+                value={view.genre ?? ""}
+                onChange={(e) => setView((v) => ({ ...v, genre: e.target.value || null }))}
+                className="rounded-lg border border-line bg-canvas px-2.5 py-1.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+              >
+                <option value="">All genres</option>
+                {genres.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="text-xs tabular-nums text-ink-3" aria-live="polite">
+              {filtered ? `${visible.length} of ${games.length}` : `${games.length} games`}
+            </span>
           </div>
           {games.length === 0 ? (
             <div className="px-6 py-16 text-center">
               <p className="font-medium">No games yet</p>
               <p className="mt-1 text-sm text-ink-3">Add the first one with the form.</p>
             </div>
+          ) : visible.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <p className="font-medium">No games match</p>
+              <button
+                onClick={() => setView((v) => ({ ...v, query: "", genre: null }))}
+                className="mt-2 text-sm text-accent hover:underline"
+              >
+                Clear filters
+              </button>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="text-xs text-ink-3">
                   <tr className="border-b border-line">
-                    <th className="px-4 py-2.5 font-medium">Game</th>
-                    <th className="px-4 py-2.5 font-medium">Genre</th>
-                    <th className="whitespace-nowrap px-4 py-2.5 text-right font-medium">Revenue / mo</th>
-                    <th className="whitespace-nowrap px-4 py-2.5 text-right font-medium">Downloads</th>
-                    <th className="px-4 py-2.5 font-medium">Rating</th>
+                    <SortHeader label="Game" sortKey="title" view={view} onSort={sortBy} />
+                    <SortHeader label="Genre" sortKey="genre" view={view} onSort={sortBy} />
+                    <SortHeader label="Revenue / mo" sortKey="monthly_revenue_usd" view={view} onSort={sortBy} align="right" />
+                    <SortHeader label="Downloads" sortKey="monthly_downloads" view={view} onSort={sortBy} align="right" />
+                    <SortHeader label="Rating" sortKey="average_rating" view={view} onSort={sortBy} />
                     <th className="py-2.5 pl-2 pr-3"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {games.map((g) => (
+                  {visible.map((g) => (
                     <tr
                       key={g.id}
                       className={`group border-b border-line/60 transition-colors last:border-0 hover:bg-surface-2 ${
@@ -196,5 +244,39 @@ function IconButton({
         {children}
       </svg>
     </button>
+  );
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  view,
+  onSort,
+  align = "left",
+}: {
+  label: string;
+  sortKey: SortKey;
+  view: TableView;
+  onSort: (key: SortKey) => void;
+  align?: "left" | "right";
+}) {
+  const active = view.sortKey === sortKey;
+  return (
+    <th
+      aria-sort={active ? (view.sortDir === "asc" ? "ascending" : "descending") : "none"}
+      className={`px-4 py-2.5 font-medium ${align === "right" ? "text-right" : ""}`}
+    >
+      <button
+        onClick={() => onSort(sortKey)}
+        className={`group/sort inline-flex items-center gap-1 whitespace-nowrap rounded transition-colors hover:text-ink ${
+          active ? "text-ink" : ""
+        } ${align === "right" ? "flex-row-reverse" : ""}`}
+      >
+        {label}
+        <span aria-hidden className={`text-[10px] ${active ? "text-accent" : "opacity-0 group-hover/sort:opacity-50"}`}>
+          {active && view.sortDir === "asc" ? "▲" : "▼"}
+        </span>
+      </button>
+    </th>
   );
 }
