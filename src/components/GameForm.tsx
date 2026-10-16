@@ -34,7 +34,10 @@ export function GameForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const raw = Object.fromEntries(
-      FIELDS.map((f) => [f.name, f.type === "number" && values[f.name] !== "" ? Number(values[f.name]) : values[f.name]]),
+      FIELDS.map((f) => {
+        const v = values[f.name].trim();
+        return [f.name, f.type === "number" ? (v === "" ? undefined : Number(v)) : v];
+      }),
     );
     const parsed = gameInputSchema.safeParse(raw); // same schema the API uses
     if (!parsed.success) {

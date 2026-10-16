@@ -19,7 +19,10 @@ const bodySchema = z.object({ messages: z.array(z.unknown()).min(1).max(MAX_MESS
 
 export async function POST(req: Request) {
   const body = bodySchema.safeParse(await req.json().catch(() => null));
-  if (!body.success) return jsonError(400, `Send 1–${MAX_MESSAGES} messages`);
+  if (!body.success) {
+    const tooLong = Array.isArray(body.error.issues) && body.error.issues.some((i) => i.code === "too_big");
+    return jsonError(400, tooLong ? "This conversation is too long. Start a new conversation." : "Invalid request");
+  }
 
   const validated = await safeValidateUIMessages({ messages: body.data.messages, tools: gameTools });
   if (!validated.success) return jsonError(400, "Invalid messages");

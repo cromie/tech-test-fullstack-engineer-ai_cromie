@@ -1,13 +1,16 @@
 import { z } from "zod";
 
+const num = (label: string) =>
+  z.number({ error: (iss) => (iss.input === undefined ? `${label} is required` : `${label} must be a number`) });
+
 /** Shared validation for the games catalog: used by the API, the form and the AI tools. */
 export const gameInputSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   developer: z.string().trim().min(1, "Developer is required").max(100),
   genre: z.string().trim().min(1, "Genre is required").max(50),
-  monthly_revenue_usd: z.number().nonnegative().max(1_000_000_000),
-  monthly_downloads: z.number().int().nonnegative().max(1_000_000_000),
-  average_rating: z.number().min(0).max(5),
+  monthly_revenue_usd: num("Revenue").nonnegative("Revenue can't be negative").max(1_000_000_000),
+  monthly_downloads: num("Downloads").int("Downloads must be a whole number").nonnegative("Downloads can't be negative").max(1_000_000_000),
+  average_rating: num("Rating").min(0, "Rating must be between 0 and 5").max(5, "Rating must be between 0 and 5"),
 });
 
 export const gameUpdateSchema = gameInputSchema
