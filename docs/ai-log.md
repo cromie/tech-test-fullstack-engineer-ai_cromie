@@ -24,3 +24,7 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 - **Outcome:** `/api/games` (GET, POST) and `/api/games/[id]` (GET, PATCH, DELETE), typed with Next 16's `RouteContext<'/api/games/[id]'>` (found in installed docs). Shared `parseBody` helper returns zod `flattenError` details on 400. GETs call `connection()` so they aren't prerendered.
 - **Verify:** `scripts/smoke-api.sh` against dev: 200 list, 201 create, 200 get/patch, 400 bad payload / bad JSON / bad id, 204 delete, 404 after delete.
 - **Bug caught by the smoke run:** the created game got id 31. `db:seed` deleted rows but AUTOINCREMENT kept counting. Now reset `sqlite_sequence` on reseed (ids are 1–15 again).
+
+## M3 — dashboard
+- **Outcome:** server page reads the DB in a `<Suspense>` + `connection()` boundary and hands the rows to a client `GamesManager` (table + create/edit/delete). The form validates with the same `gameInputSchema` as the API and shows per-field errors; API errors show in an alert box. Includes an empty state.
+- **Verify:** typecheck + lint clean; SSR HTML for `/` contains the seeded rows. CRUD behaviour is covered by the M2 smoke script; the in-browser click-through is still for me to do by hand.
