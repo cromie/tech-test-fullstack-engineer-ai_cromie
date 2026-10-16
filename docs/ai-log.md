@@ -19,3 +19,8 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 - **Design choice:** seed has two games at exactly 4.0, so a test can tell "above 4" (`gt` → 9) apart from `gte` (11).
 - **AI mistake:** the agent hand-wrote an expected value in the group-by test as "Anvilheart 132,200 is the top developer". The test failed, and the code was right: Gridline Studio = 72,900 + 64,100 = 137,000. Fixed the expectation, not the code. Lesson: AI mental arithmetic over fixtures isn't reliable; let the test runner check it.
 - **Verify:** `npm test` 12/12, typecheck + lint clean.
+
+## M2 — REST API
+- **Outcome:** `/api/games` (GET, POST) and `/api/games/[id]` (GET, PATCH, DELETE), typed with Next 16's `RouteContext<'/api/games/[id]'>` (found in installed docs). Shared `parseBody` helper returns zod `flattenError` details on 400. GETs call `connection()` so they aren't prerendered.
+- **Verify:** `scripts/smoke-api.sh` against dev: 200 list, 201 create, 200 get/patch, 400 bad payload / bad JSON / bad id, 204 delete, 404 after delete.
+- **Bug caught by the smoke run:** the created game got id 31. `db:seed` deleted rows but AUTOINCREMENT kept counting. Now reset `sqlite_sequence` on reseed (ids are 1–15 again).

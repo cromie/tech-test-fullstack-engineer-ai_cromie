@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
+import { sql } from "drizzle-orm";
 import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { gamesTable } from "./table";
 import { SEED_GAMES } from "./seed-data";
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS games (
 
 export function seed(db: Db) {
   db.delete(gamesTable).run();
+  db.run(sql`DELETE FROM sqlite_sequence WHERE name = 'games'`); // restart ids at 1
   db.insert(gamesTable).values(SEED_GAMES).run();
 }
 
