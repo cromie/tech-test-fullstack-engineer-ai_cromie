@@ -16,3 +16,8 @@ pnpm-debug.log*
 *.sqlite3
 *.db
 coverage/
+!.env.example
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+data/

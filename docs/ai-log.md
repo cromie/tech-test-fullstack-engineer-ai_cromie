@@ -1,0 +1,15 @@
+# AI log
+
+Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events only.
+
+## Planning (Claude Code, Opus 5.5, plan mode)
+- **Prompt:** structured plan-mode prompt: MVP first with a gate before extras, security guardrails, ≤3 clarifying questions, CLAUDE.md draft, list of likely AI failure points.
+- **Outcome:** asked 3 questions ("last month" interpretation, model, scope). I picked: snapshot (monthly_revenue_usd = last month), Sonnet 5.5, scope as written. Got a 1-page plan with 6 milestones.
+- **Changed:** nothing; approved phase 1 as is.
+
+## M0 — scaffold
+- **Prompt:** "approve phase 1".
+- **Outcome:** `create-next-app@16.4.2` (latest; README says 14+). Repo already had README/.gitignore, so the agent scaffolded in a scratch dir and rsynced it in, keeping the original README/.gitignore.
+- **Hiccup:** `vitest@5` peer-requires `@types/node >=22`; the scaffold pins `^20` → ERESOLVE. Fixed by bumping `@types/node` to `^24` (no `--force`).
+- **AI near-miss:** the plan named AI SDK APIs from memory (`toUIMessageStreamResponse`, `stepCountIs`, `system`). Reading `node_modules/ai/docs` showed v7 renamed them (`createUIMessageStreamResponse`+`toUIMessageStream`, `isStepCount`, `instructions`). Also found Next 16 `cacheComponents` treats sync I/O (better-sqlite3) as prerenderable → dashboard would be frozen at build. Both recorded in CLAUDE.md.
+- **Noted, not fixed:** `npm audit` reports 5 high in the `eslint-config-next` → fast-glob → micromatch chain (dev-only). Did not `audit fix --force`.
