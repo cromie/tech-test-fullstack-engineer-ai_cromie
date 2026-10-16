@@ -41,20 +41,20 @@ export function ToolCall({ part }: { part: Part }) {
   const summary = summarize(part);
 
   return (
-    <details className="group mb-2 rounded border border-zinc-200 bg-zinc-50 text-xs">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-2 py-1.5 text-zinc-600">
-        <span aria-hidden className={running ? "animate-spin" : ""}>
+    <details className="group mb-3 rounded-lg border border-line bg-canvas/60 text-xs">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-ink-2">
+        <span aria-hidden className={running ? "animate-spin text-accent" : failed ? "text-danger" : "text-emerald-400"}>
           {running ? "◌" : failed ? "✗" : "✓"}
         </span>
-        <span className="font-medium text-zinc-800">{LABELS[part.type]}</span>
-        {summary && <span className="truncate text-zinc-500">· {summary}</span>}
-        {failed && <span className="text-red-600">· failed</span>}
-        <span className="ml-auto text-zinc-400 group-open:rotate-90" aria-hidden>›</span>
+        <span className="font-medium text-ink">{LABELS[part.type]}</span>
+        {summary && <span className="truncate text-ink-3">· {summary}</span>}
+        {failed && <span className="text-danger">· failed</span>}
+        <span className="ml-auto text-ink-3 transition-transform group-open:rotate-90" aria-hidden>›</span>
       </summary>
-      <div className="space-y-2 border-t border-zinc-200 px-2 py-2">
+      <div className="space-y-2 border-t border-line px-3 py-2.5">
         {part.input !== undefined && <JsonBlock label="Input" value={part.input} />}
         {part.state === "output-available" && <JsonBlock label="Output" value={part.output} />}
-        {failed && <p className="text-red-600">{part.errorText}</p>}
+        {failed && <p className="text-danger">{part.errorText}</p>}
       </div>
     </details>
   );
@@ -63,8 +63,8 @@ export function ToolCall({ part }: { part: Part }) {
 function JsonBlock({ label, value }: { label: string; value: unknown }) {
   return (
     <div>
-      <p className="mb-1 font-medium text-zinc-500">{label}</p>
-      <pre className="max-h-48 overflow-auto rounded bg-white p-2 text-[11px] leading-snug">
+      <p className="mb-1 font-medium text-ink-3">{label}</p>
+      <pre className="max-h-48 overflow-auto rounded-md border border-line bg-surface p-2 text-[11px] leading-snug text-ink-2">
         {JSON.stringify(value, null, 2)}
       </pre>
     </div>

@@ -49,14 +49,14 @@ export function Chat() {
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex-1 space-y-4">
         {messages.length === 0 && (
-          <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-center">
-            <p className="mb-4 text-sm text-zinc-500">Ask anything about the catalog, or try one of these:</p>
+          <div className="rounded-xl border border-line bg-surface p-8 text-center">
+            <p className="mb-5 text-sm text-ink-2">Ask anything about the catalog, or try one of these:</p>
             <div className="flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => ask(s)}
-                  className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:border-zinc-500"
+                  className="rounded-full border border-line bg-surface-2 px-3.5 py-1.5 text-sm text-ink-2 transition hover:border-accent/60 hover:text-ink"
                 >
                   {s}
                 </button>
@@ -70,8 +70,8 @@ export function Chat() {
             <div
               className={
                 m.role === "user"
-                  ? "max-w-[80%] rounded-lg bg-zinc-900 px-3 py-2 text-white"
-                  : "max-w-full rounded-lg border border-zinc-200 bg-white px-4 py-3"
+                  ? "max-w-[80%] rounded-2xl rounded-br-md bg-accent px-4 py-2.5 text-white shadow-lg shadow-accent/15"
+                  : "max-w-full rounded-2xl rounded-bl-md border border-line bg-surface px-5 py-4 text-ink"
               }
             >
               {m.parts.map((part, i) => {
@@ -90,12 +90,12 @@ export function Chat() {
         ))}
 
         {status === "submitted" && (
-          <p className="flex items-center gap-2 text-sm text-zinc-400">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-zinc-400" /> Thinking…
+          <p className="flex items-center gap-2 text-sm text-ink-3">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-accent" /> Thinking…
           </p>
         )}
         {error && (
-          <div role="alert" className="flex items-center justify-between rounded bg-red-50 p-3 text-sm text-red-700">
+          <div role="alert" className="flex items-center justify-between rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
             <span>{rejection ?? "Something went wrong."}</span>
             {!rejection && messages.length > 0 && (
               <button onClick={() => regenerate()} className="font-medium underline">
@@ -112,7 +112,7 @@ export function Chat() {
           e.preventDefault();
           ask(input);
         }}
-        className="sticky bottom-0 bg-zinc-50 py-3"
+        className="sticky bottom-0 bg-canvas/90 py-4 backdrop-blur"
       >
         <div className="flex gap-2">
           <input
@@ -120,24 +120,24 @@ export function Chat() {
             onChange={(e) => setInput(e.target.value)}
             maxLength={MAX_INPUT_CHARS}
             placeholder="Ask about revenue, downloads, ratings…"
-            className="flex-1 rounded border border-zinc-300 bg-white px-3 py-2"
+            className="flex-1 rounded-xl border border-line bg-surface px-4 py-3 text-ink outline-none transition placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20"
             aria-label="Message"
           />
           {busy ? (
-            <button type="button" onClick={() => stop()} className="rounded border border-zinc-300 px-4 py-2 text-sm">
+            <button type="button" onClick={() => stop()} className="rounded-xl border border-line px-5 py-3 text-sm text-ink-2 hover:text-ink">
               Stop
             </button>
           ) : (
             <button
               type="submit"
               disabled={!input.trim()}
-              className="rounded bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded-xl bg-accent px-5 py-3 text-sm font-medium text-white shadow-lg shadow-accent/20 transition hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
             >
               Send
             </button>
           )}
         </div>
-        <div className="mt-1 flex justify-between text-xs text-zinc-400">
+        <div className="mt-1.5 flex justify-between px-1 text-xs text-ink-3">
           <span>
             {(messages.length > 0 || error) && !busy && (
               <button
@@ -146,7 +146,7 @@ export function Chat() {
                   setMessages([]);
                   clearError();
                 }}
-                className="hover:text-zinc-600"
+                className="hover:text-ink"
               >
                 New conversation
               </button>

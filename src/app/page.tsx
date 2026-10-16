@@ -11,21 +11,32 @@ async function Games() {
 
 export default function DashboardPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-semibold">Games catalog</h1>
-      <Suspense fallback={<TableSkeleton />}>
+    <main className="mx-auto w-full max-w-7xl px-6 py-10">
+      <header className="mb-8">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">Internal dashboard</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Games catalog</h1>
+        <p className="mt-1 text-sm text-ink-2">Monthly performance across the indie portfolio.</p>
+      </header>
+      <Suspense fallback={<DashboardSkeleton />}>
         <Games />
       </Suspense>
     </main>
   );
 }
 
-function TableSkeleton() {
+function DashboardSkeleton() {
   return (
-    <div aria-busy className="space-y-2 rounded-lg border border-zinc-200 bg-white p-4">
-      {Array.from({ length: 8 }, (_, i) => (
-        <div key={i} className="h-6 animate-pulse rounded bg-zinc-100" />
-      ))}
+    <div aria-busy className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="h-24 animate-pulse rounded-xl border border-line bg-surface" />
+        ))}
+      </div>
+      <div className="space-y-2 rounded-xl border border-line bg-surface p-4">
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className="h-10 animate-pulse rounded-lg bg-surface-2" />
+        ))}
+      </div>
     </div>
   );
 }

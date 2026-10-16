@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* Dark "game launcher" theme. Tokens become utilities: bg-surface, text-ink-2, border-line, … */
 @theme inline {
   --font-sans: var(--font-geist-sans);
+
+  --color-canvas: #0a0c10;
+  --color-surface: #11141a;
+  --color-surface-2: #171b23;
+  --color-line: #232834;
+  --color-ink: #eceef2;
+  --color-ink-2: #a3a9b6;
+  --color-ink-3: #6b7280;
+  --color-accent: #3987e5; /* sequential blue, step 400: clears 3:1 on the dark surface */
+  --color-accent-soft: #184f95;
+  --color-star: #f5b942;
+  --color-danger: #f0686a;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 500px at 15% -10%, rgb(57 135 229 / 0.12), transparent 60%),
+    radial-gradient(900px 400px at 100% 0%, rgb(124 92 255 / 0.08), transparent 60%),
+    var(--color-canvas);
+}
+
+::selection {
+  background: rgb(57 135 229 / 0.35);
 }

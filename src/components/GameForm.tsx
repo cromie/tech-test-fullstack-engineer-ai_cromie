@@ -52,10 +52,10 @@ export function GameForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-3">
+    <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
       {FIELDS.map((f) => (
         <label key={f.name} className="block text-sm">
-          <span className="text-zinc-600">{f.label}</span>
+          <span className="text-xs text-ink-2">{f.label}</span>
           <input
             name={f.name}
             type={f.type}
@@ -63,21 +63,21 @@ export function GameForm({
             value={values[f.name]}
             onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
             aria-invalid={!!errors[f.name]}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 aria-invalid:border-red-400"
+            className="mt-1 w-full rounded-lg border border-line bg-canvas px-3 py-2 text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20 aria-invalid:border-danger"
           />
-          {errors[f.name] && <span className="text-xs text-red-600">{errors[f.name]![0]}</span>}
+          {errors[f.name] && <span className="mt-1 block text-xs text-danger">{errors[f.name]![0]}</span>}
         </label>
       ))}
-      <div className="flex gap-2 pt-1">
+      <div className="flex gap-2 pt-2">
         <button
           type="submit"
           disabled={submitting}
-          className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-700 disabled:opacity-50"
+          className="flex-1 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white shadow-lg shadow-accent/20 transition hover:brightness-110 disabled:opacity-50"
         >
           {submitting ? "Saving…" : initial ? "Save changes" : "Add game"}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="rounded border border-zinc-300 px-3 py-1.5 text-sm">
+          <button type="button" onClick={onCancel} className="rounded-lg border border-line px-3 py-2 text-sm text-ink-2 hover:text-ink">
             Cancel
           </button>
         )}

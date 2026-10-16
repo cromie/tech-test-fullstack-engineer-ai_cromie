@@ -69,3 +69,9 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 - **All 12 fixed**, with 12 new unit tests (24 total), including `request.test.ts` for the forged-history case. Evals still 7/7, smoke and build green.
 - **AI mistake (repeat):** in the new group-cap test I again hand-computed a fixture total wrong (70 vs actual 68 = 60 + 8 seed developers). Same lesson as M1; the runner caught it.
 - **Takeaway:** a fresh context found what the implementing context had normalized. The CLAUDE.md rules were right, but my implementation of "max input length" was too literal (per part, user-only).
+
+## Extra A — "elegant video-game dashboard UI" (user-requested)
+- **Prompt:** "add a Video Game Dashboard UI, an elegant one" (no style reference, so the agent picked a restrained dark game-launcher look and said so up front).
+- **Process:** loaded the dataviz skill before building stat tiles and inline bars: stat-tile pattern (label + compact value, no fake deltas because there's no history), one sequential blue hue for revenue bars with the value in ink not bar color, genre pills kept neutral (11 genres > 8 categorical slots), decorative cover tiles always carry initials so identity isn't color-only.
+- **Outcome:** theme tokens in `globals.css` (`bg-surface`, `text-ink-2`, …), KPI tiles (revenue, downloads, avg rating, top earner), cover tiles, star ratings, revenue bars, active-state nav, restyled chat/tool cards/markdown tables. Replaced `window.confirm` with an inline "Delete? Yes / No".
+- **Bug caught by screenshot:** first render clipped the Delete button (table wider than its grid column). Fixed with icon buttons, `minmax(0,1fr)` grid column, narrower panel. Verified in Chrome: edit highlight + panel, inline delete (row gone, API back to 15), chat compare with tool card + table.
