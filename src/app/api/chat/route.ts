@@ -1,4 +1,3 @@
-import { anthropic } from "@ai-sdk/anthropic";
 import {
   convertToModelMessages,
   createUIMessageStreamResponse,
@@ -9,6 +8,7 @@ import {
 } from "ai";
 import { z } from "zod";
 import { CHAT_INSTRUCTIONS } from "@/lib/ai/instructions";
+import { chatModel } from "@/lib/ai/model";
 import { gameTools } from "@/lib/ai/tools";
 import { jsonError } from "@/lib/http";
 
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   if (!process.env.ANTHROPIC_API_KEY) return jsonError(500, "ANTHROPIC_API_KEY is not configured on the server");
 
   const result = streamText({
-    model: anthropic(process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5"),
+    model: chatModel(),
     instructions: CHAT_INSTRUCTIONS,
     messages: await convertToModelMessages(messages),
     tools: gameTools,

@@ -10,7 +10,7 @@ Requires Node 22+ (developed on Node 26).
 
 ```bash
 npm install
-cp .env.example .env        # then set ANTHROPIC_API_KEY
+cp .env.example .env        # then set ANTHROPIC_API_KEY (+ ANTHROPIC_WORKSPACE_ID for user-level sk-ant-usr- keys)
 npm run dev                 # http://localhost:3000
 ```
 
