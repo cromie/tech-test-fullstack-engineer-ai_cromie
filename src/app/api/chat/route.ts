@@ -8,15 +8,28 @@ import {
 } from "ai";
 import { z } from "zod";
 import { CHAT_INSTRUCTIONS } from "@/lib/ai/instructions";
-import { MAX_MESSAGES } from "@/lib/ai/limits";
+import { CHAT_RATE_LIMIT, MAX_MESSAGES } from "@/lib/ai/limits";
 import { chatModel } from "@/lib/ai/model";
 import { checkHistory, sanitizeHistory } from "@/lib/ai/request";
 import { gameTools } from "@/lib/ai/tools";
 import { jsonError } from "@/lib/http";
+import { clientKey, createRateLimiter } from "@/lib/rate-limit";
 
 const bodySchema = z.object({ messages: z.array(z.unknown()).min(1) });
 
+// One limiter per server process; survives dev hot reloads.
+const globalForLimiter = globalThis as unknown as { chatLimiter?: ReturnType<typeof createRateLimiter> };
+const rateLimit = (globalForLimiter.chatLimiter ??= createRateLimiter(CHAT_RATE_LIMIT));
+
 export async function POST(req: Request) {
+  // Checked first: rejected requests cost nothing, but every accepted one spends API credits.
+  const limited = rateLimit(clientKey(req));
+  if (!limited.ok) {
+    const res = jsonError(429, `Too many requests. Try again in ${limited.retryAfterSec}s.`);
+    res.headers.set("Retry-After", String(limited.retryAfterSec));
+    return res;
+  }
+
   const body = bodySchema.safeParse(await req.json().catch(() => null));
   if (!body.success) return jsonError(400, "Invalid request");
   if (body.data.messages.length > MAX_MESSAGES) {

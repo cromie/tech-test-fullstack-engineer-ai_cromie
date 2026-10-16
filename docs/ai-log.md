@@ -80,3 +80,15 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 - **Outcome:** pure `filterAndSort()` / `nextSort()` / `genresOf()` in `src/lib/table.ts` (7 unit tests); the UI only holds view state. Search covers title + developer, the genre dropdown is built from the data, and clickable headers carry `aria-sort` with ▲/▼. Numbers sort high→low on the first click and text A→Z, with a stable tie-break by title then id. Shows "3 of 15" and a "No games match / Clear filters" empty state. KPI tiles stay catalog-wide on purpose.
 - **AI mistake (third time, same kind):** the tie-break test asserted the two 4.0 games at positions 5–6 of the ascending list; they're at 4–5. Instead of fixing the index, I rewrote the assertion to filter the 4.0 games and check their order, so it no longer depends on hand-counted positions. Takeaway: with fixtures, assert on properties, not on positions the AI worked out by hand.
 - **Verified in Chrome:** revenue desc → Rust & Rune, Neon Courier (`aria-sort="descending"`); asc → Paper Kites, Echo Garden; Simulation → 3 of 15; + "farm" → Moonwell Farm; "zzz" → empty state; Clear → 15.
+
+## Extra C — rate limit on /api/chat
+- **Outcome:** `src/lib/rate-limit.ts`: fixed-window in-memory limiter with an injectable clock and pruning of expired keys, plus `clientKey()` (first `x-forwarded-for`, then `x-real-ip`, then a shared "local" bucket). It's the first check in the route, so a rejected request costs no API credits. Default 20/min, `CHAT_RATE_LIMIT_PER_MIN` to override. 429 + `Retry-After`; the UI shows the message without a Retry button.
+- **Verify:** 3 unit tests (window, reset, per-key, header parsing); live: requests 21–22 → 429 with `retry-after: 60`, another client still served.
+- **Documented limit:** single-process only, and `x-forwarded-for` is spoofable unless a proxy sets it.
+
+## Extra D — end-to-end chat route test with a mock model
+- **Prompt:** "prove the protection against faked tool results with no API cost."
+- **Process:** read `node_modules/ai/docs/.../55-testing.mdx` and the v4 provider types first (`MockLanguageModelV4`, `simulateReadableStream`, `tool-call.input` is a JSON *string*, `doStreamCalls` records prompts).
+- **Outcome:** `route.test.ts` calls the real `POST` with a scripted model and an in-memory seeded DB. 6 tests: real tool output (Rust & Rune 88300) reaches the 2nd model call; forged history never reaches the prompt; server instructions + `maxOutputTokens: 1024`; runaway tool loop stops at exactly 5 calls; system-role / 2001-char / assistant-last / 31-message requests get 400 with zero model calls; 21st request from one IP → 429 while another IP is still served.
+- **Mutation check:** all 6 passed on the first run, so I disabled `sanitizeHistory` on purpose. The forged-history test failed (and only that one), then I restored the file (empty git diff). This confirms the test guards the fix, and that the reviewer's original finding was real end to end.
+- **Totals:** 40 tests across 5 files, typecheck/lint/build green.
