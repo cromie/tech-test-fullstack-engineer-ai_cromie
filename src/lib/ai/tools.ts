@@ -22,7 +22,7 @@ export const gameTools = {
   compare_games: tool({
     description:
       "Fetch 2–5 games by title (exact match first, then partial) to compare them side by side. " +
-      "Reports titles that were not found or matched more than one game.",
+      "Each found game includes match: exact|partial. Also reports titles that were not found or matched more than one game. Results are final.",
     inputSchema: compareGamesSchema,
     execute: async (input) => compareGames(getDb(), input),
   }),

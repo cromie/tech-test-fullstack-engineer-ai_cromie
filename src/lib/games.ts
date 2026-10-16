@@ -100,16 +100,16 @@ export function aggregateGames(db: Db, input: AggregateGamesInput) {
   };
 }
 
-/** Resolves each title (exact match first, then substring) and returns the matched games side by side. */
+/** Resolves each title (exact match first, then substring) and returns the matched games side by side. Results are final: not_found means no title contains the query. */
 export function compareGames(db: Db, input: CompareGamesInput) {
-  const found: Game[] = [];
+  const found: (Game & { query: string; match: "exact" | "partial" })[] = [];
   const not_found: string[] = [];
   const ambiguous: { query: string; candidates: string[] }[] = [];
 
   for (const query of input.titles) {
     const exact = db.select().from(gamesTable).where(ciEquals(gamesTable.title, query)).all();
     const matches = exact.length ? exact : db.select().from(gamesTable).where(titleContains(query)).limit(6).all();
-    if (matches.length === 1) found.push(matches[0]);
+    if (matches.length === 1) found.push({ ...matches[0], query, match: exact.length ? "exact" : "partial" });
     else if (matches.length === 0) not_found.push(query);
     else ambiguous.push({ query, candidates: matches.map((g) => g.title) });
   }

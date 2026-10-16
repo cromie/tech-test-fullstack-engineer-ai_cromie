@@ -53,3 +53,9 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 - **Verified in a real browser (Claude in Chrome)**, which also covered the click-through the MVP gate was missing: suggestion button → streamed answer + tool card + gfm table; empty submit shows 6 field errors; create, edit, delete all update the table (`confirm` stubbed so the dialog doesn't block automation).
 - **Bug found by the browser pass:** empty number inputs showed raw zod text "Invalid input: expected number, received string". Form now sends `undefined` for empty numbers, and the shared schema has human messages ("Revenue is required", "Rating must be between 0 and 5"). Curl and unit tests didn't catch this; only looking at the UI did.
 - **Also:** >30-message conversations used to get "Send 1–30 messages"; now "This conversation is too long. Start a new conversation."
+
+## Phase 2.4 — chat evals
+- **Outcome:** `scripts/evals.mjs` (`npm run evals`) streams real answers from `/api/chat` and asserts on tool name + arguments + answer text for 7 cases: the 3 README questions, unknown title (Hades), redundant calls, off-topic, and prompt injection (sets up a malicious title through the API and deletes it after).
+- **Baseline: 6/7.** It reproduced the gate observation: "Moon vs Star" → `compare_games` and then 2 redundant `query_games`. It also showed a smaller one: after `not_found: ["Hades"]` the model searched for Hades again.
+- **Fix at the tool, not only the prompt:** `compare_games` now returns `query` + `match: "exact" | "partial"` per found game, the tool description says results are final, and one instruction line says not to re-query. Unit test updated to assert the match type.
+- **After: 7/7 on two consecutive runs**, and the Hades case dropped to a single tool call. Two runs is a small sample; LLM behaviour can still vary.

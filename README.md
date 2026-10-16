@@ -22,6 +22,7 @@ The SQLite database (`data/games.db`) is created and seeded with 15 fictional ga
 | `npm test` | Vitest unit tests for the query/aggregation layer |
 | `npm run typecheck` / `lint` | `tsc --noEmit` (after `next typegen`) / ESLint |
 | `scripts/smoke-api.sh [base_url]` | curl walk-through of every API route and error case |
+| `npm run evals -- [base_url]` | Live chat evals (7 cases: README questions, unknown title, redundant calls, off-topic, prompt injection). Needs the key; costs a few cents |
 | `node scripts/ask.mjs "question" [base_url]` | Ask the chat from the terminal; prints tool calls + streamed answer |
 
 ## Stack
@@ -66,7 +67,7 @@ The model never sees the whole table. It only gets the rows or aggregates a tool
 - **"Last month".** The required schema has only `monthly_revenue_usd`, with no dates, so it is treated as last month's snapshot. The system prompt tells the model to say so. Real history would need a `game_monthly_metrics(game_id, month, …)` table.
 - **No auth.** The assignment marks it out of scope. Anyone who can reach the server can edit the catalog and use the API key's quota. Don't deploy this as is.
 - **SQLite + sync driver.** Zero setup and fine for a local tool. The table is created with a `CREATE TABLE IF NOT EXISTS` at startup instead of migrations.
-- **Tests cover the data layer only** (the tool logic is where wrong answers would come from). There are no UI or LLM eval tests yet.
+- **Tests:** unit tests cover the data layer, where wrong answers would come from. `npm run evals` checks the live model: tool choice, arguments and answer, against the seed data. Evals are kept out of `npm test` because they need the API key and cost money. There are no UI tests.
 - **No rate limiting** on `/api/chat`. Input size, message count, tool steps and output tokens are capped instead.
 
 ## Security notes

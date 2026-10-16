@@ -66,7 +66,10 @@ describe("aggregateGames", () => {
 describe("compareGames", () => {
   it("resolves exact and partial titles", () => {
     const r = compareGames(db, { titles: ["hollow tides", "Neon"] });
-    expect(r.found.map((g) => g.title)).toEqual(["Hollow Tides", "Neon Courier"]);
+    expect(r.found.map((g) => [g.title, g.match])).toEqual([
+      ["Hollow Tides", "exact"],
+      ["Neon Courier", "partial"],
+    ]);
     expect(r.not_found).toEqual([]);
   });
 
