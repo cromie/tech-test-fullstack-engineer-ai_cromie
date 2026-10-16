@@ -12,7 +12,7 @@ export function Nav() {
   const pathname = usePathname();
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-canvas/80 backdrop-blur">
-      <nav className="mx-auto flex max-w-7xl items-center gap-8 px-6 py-3">
+      <nav className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:gap-8 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight text-ink">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-accent to-violet-500 shadow-lg shadow-accent/20">
             <GamepadIcon />

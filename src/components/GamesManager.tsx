@@ -108,10 +108,10 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
       <StatTiles games={games} />
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <section className="overflow-hidden rounded-xl border border-line bg-surface">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-line bg-surface">
           <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
             <h2 className="mr-auto text-sm font-medium">Library</h2>
-            <label className="relative">
+            <label className="relative w-full sm:w-auto">
               <span className="sr-only">Search games</span>
               <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                 <circle cx="11" cy="11" r="7" />
@@ -122,7 +122,7 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
                 value={view.query}
                 onChange={(e) => setView((v) => ({ ...v, query: e.target.value }))}
                 placeholder="Search title or developer"
-                className="w-56 rounded-lg border border-line bg-canvas py-1.5 pl-8 pr-3 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-lg border border-line bg-canvas py-1.5 pl-8 pr-3 text-sm sm:w-56 text-ink outline-none placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20"
               />
             </label>
             <label>
@@ -160,14 +160,15 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
+              {/* relative: absolutely positioned children (sr-only labels) are clipped here instead of widening the page */}
               <table className="w-full text-left text-sm">
                 <thead className="text-xs text-ink-3">
                   <tr className="border-b border-line">
                     <SortHeader label="Game" sortKey="title" view={view} onSort={sortBy} />
-                    <SortHeader label="Genre" sortKey="genre" view={view} onSort={sortBy} />
+                    <SortHeader label="Genre" sortKey="genre" view={view} onSort={sortBy} className="hidden md:table-cell" />
                     <SortHeader label="Revenue / mo" sortKey="monthly_revenue_usd" view={view} onSort={sortBy} align="right" />
-                    <SortHeader label="Downloads" sortKey="monthly_downloads" view={view} onSort={sortBy} align="right" />
+                    <SortHeader label="Downloads" sortKey="monthly_downloads" view={view} onSort={sortBy} align="right" className="hidden sm:table-cell" />
                     <SortHeader label="Rating" sortKey="average_rating" view={view} onSort={sortBy} />
                     <th className="py-2.5 pl-2 pr-3"><span className="sr-only">Actions</span></th>
                   </tr>
@@ -189,13 +190,13 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="hidden px-4 py-2.5 md:table-cell">
                         <GenrePill genre={g.genre} />
                       </td>
                       <td className="px-4 py-2.5">
                         <RevenueBar value={g.monthly_revenue_usd} max={maxRevenue} />
                       </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-ink-2">{int(g.monthly_downloads)}</td>
+                      <td className="hidden px-4 py-2.5 text-right tabular-nums text-ink-2 sm:table-cell">{int(g.monthly_downloads)}</td>
                       <td className="whitespace-nowrap px-4 py-2.5">
                         <Stars rating={g.average_rating} />
                       </td>
@@ -290,18 +291,20 @@ function SortHeader({
   view,
   onSort,
   align = "left",
+  className = "",
 }: {
   label: string;
   sortKey: SortKey;
   view: TableView;
   onSort: (key: SortKey) => void;
   align?: "left" | "right";
+  className?: string;
 }) {
   const active = view.sortKey === sortKey;
   return (
     <th
       aria-sort={active ? (view.sortDir === "asc" ? "ascending" : "descending") : "none"}
-      className={`px-4 py-2.5 font-medium ${align === "right" ? "text-right" : ""}`}
+      className={`px-4 py-2.5 font-medium ${align === "right" ? "text-right" : ""} ${className}`}
     >
       <button
         onClick={() => onSort(sortKey)}

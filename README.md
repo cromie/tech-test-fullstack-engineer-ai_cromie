@@ -59,6 +59,7 @@ Try in the chat: *"Which game made the most revenue last month?"*, *"How many ga
 - Create and edit in a side panel. The form validates with the same zod schema as the API and shows per-field messages. Delete uses an inline "Delete? Yes / No".
 - Reloads the list when the tab regains focus, so changes from another tab or the API show up. A refresh that overlaps a local save is discarded so it can't undo it.
 - Loading skeletons and empty states.
+- Works at phone width (checked at 390px with no sideways page scroll): the table scrolls inside its card, and Genre/Downloads are hidden on small screens.
 
 **Chat (`/chat`)**
 - Streams responses from Claude. Each tool call renders as a collapsible card with its status, a one-line summary and the raw input and output.

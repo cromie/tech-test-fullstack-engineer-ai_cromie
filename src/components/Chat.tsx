@@ -120,7 +120,7 @@ export function Chat() {
             onChange={(e) => setInput(e.target.value)}
             maxLength={MAX_INPUT_CHARS}
             placeholder="Ask about revenue, downloads, ratings…"
-            className="flex-1 rounded-xl border border-line bg-surface px-4 py-3 text-ink outline-none transition placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20"
+            className="min-w-0 flex-1 rounded-xl border border-line bg-surface px-4 py-3 text-ink outline-none transition placeholder:text-ink-3 focus:border-accent focus:ring-2 focus:ring-accent/20"
             aria-label="Message"
           />
           {busy ? (
