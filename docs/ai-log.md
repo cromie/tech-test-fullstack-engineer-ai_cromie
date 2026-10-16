@@ -13,3 +13,9 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 - **Hiccup:** `vitest@5` peer-requires `@types/node >=22`; the scaffold pins `^20` → ERESOLVE. Fixed by bumping `@types/node` to `^24` (no `--force`).
 - **AI near-miss:** the plan named AI SDK APIs from memory (`toUIMessageStreamResponse`, `stepCountIs`, `system`). Reading `node_modules/ai/docs` showed v7 renamed them (`createUIMessageStreamResponse`+`toUIMessageStream`, `isStepCount`, `instructions`). Also found Next 16 `cacheComponents` treats sync I/O (better-sqlite3) as prerenderable → dashboard would be frozen at build. Both recorded in CLAUDE.md.
 - **Noted, not fixed:** `npm audit` reports 5 high in the `eslint-config-next` → fast-glob → micromatch chain (dev-only). Did not `audit fix --force`.
+
+## M1 — schema, DB, query functions
+- **Outcome:** one zod schema file with whitelisted enums for filter/sort/group columns; Drizzle + better-sqlite3; DB auto-creates and seeds on first open; `queryGames`/`aggregateGames`/`compareGames` take `db` as a param so tests use `:memory:`. 12 Vitest tests.
+- **Design choice:** seed has two games at exactly 4.0, so a test can tell "above 4" (`gt` → 9) apart from `gte` (11).
+- **AI mistake:** the agent hand-wrote an expected value in the group-by test as "Anvilheart 132,200 is the top developer". The test failed, and the code was right: Gridline Studio = 72,900 + 64,100 = 137,000. Fixed the expectation, not the code. Lesson: AI mental arithmetic over fixtures isn't reliable; let the test runner check it.
+- **Verify:** `npm test` 12/12, typecheck + lint clean.
