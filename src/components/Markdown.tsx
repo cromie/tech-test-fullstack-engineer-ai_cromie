@@ -1,7 +1,8 @@
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// react-markdown escapes raw HTML by default and sanitizes link URLs; we never enable rehype-raw.
+// react-markdown escapes raw HTML and sanitizes link URLs; we never enable rehype-raw.
+// Images are dropped: a URL in model output would load with no click and could leak data (prompt injection via titles).
 const components: Components = {
   p: (props) => <p className="mb-2 last:mb-0" {...props} />,
   ul: (props) => <ul className="mb-2 list-disc pl-5" {...props} />,
@@ -13,5 +14,5 @@ const components: Components = {
 };
 
 export function Markdown({ children }: { children: string }) {
-  return <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>{children}</ReactMarkdown>;
+  return <ReactMarkdown remarkPlugins={[remarkGfm]} disallowedElements={["img"]} components={components}>{children}</ReactMarkdown>;
 }

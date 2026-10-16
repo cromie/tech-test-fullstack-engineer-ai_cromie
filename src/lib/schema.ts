@@ -17,7 +17,7 @@ export const gameUpdateSchema = gameInputSchema
   .partial()
   .refine((v) => Object.keys(v).length > 0, "At least one field is required");
 
-export const gameIdSchema = z.coerce.number().int().positive();
+export const gameIdSchema = z.string().regex(/^[1-9]\d{0,15}$/).transform(Number);
 
 export type GameInput = z.infer<typeof gameInputSchema>;
 export type GameUpdate = z.infer<typeof gameUpdateSchema>;

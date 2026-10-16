@@ -3,11 +3,11 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isStaticToolUIPart } from "ai";
 import { useEffect, useRef, useState } from "react";
+import { MAX_INPUT_CHARS } from "@/lib/ai/limits";
 import type { ChatMessage } from "@/lib/ai/types";
 import { Markdown } from "./Markdown";
 import { ToolCall } from "./ToolCall";
 
-const MAX_INPUT_CHARS = 2000;
 const SUGGESTIONS = [
   "Which game made the most revenue last month?",
   "How many games are rated above 4?",
@@ -15,22 +15,24 @@ const SUGGESTIONS = [
   "What's the average rating per genre?",
 ];
 
-/** The API returns `{ error }` JSON on 4xx/5xx; the transport surfaces the raw body as the message. */
-function errorText(error: Error) {
+/** The API returns `{ error }` JSON for rejected requests; the transport surfaces the raw body as the message. */
+function apiError(error: Error): string | null {
   try {
     const parsed = JSON.parse(error.message);
     if (typeof parsed?.error === "string") return parsed.error;
   } catch {}
-  return "Something went wrong.";
+  return null;
 }
 
 export function Chat() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status, error, stop, regenerate, setMessages } = useChat<ChatMessage>({
+  const { messages, sendMessage, status, error, stop, regenerate, setMessages, clearError } = useChat<ChatMessage>({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
   const busy = status === "submitted" || status === "streaming";
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Rejected requests (4xx with a message) fail the same way on retry; only offer Retry for other failures.
+  const rejection = error ? apiError(error) : null;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -94,10 +96,12 @@ export function Chat() {
         )}
         {error && (
           <div role="alert" className="flex items-center justify-between rounded bg-red-50 p-3 text-sm text-red-700">
-            <span>{errorText(error)}</span>
-            <button onClick={() => regenerate()} className="font-medium underline">
-              Retry
-            </button>
+            <span>{rejection ?? "Something went wrong."}</span>
+            {!rejection && messages.length > 0 && (
+              <button onClick={() => regenerate()} className="font-medium underline">
+                Retry
+              </button>
+            )}
           </div>
         )}
         <div ref={bottomRef} />
@@ -135,8 +139,15 @@ export function Chat() {
         </div>
         <div className="mt-1 flex justify-between text-xs text-zinc-400">
           <span>
-            {messages.length > 0 && !busy && (
-              <button type="button" onClick={() => setMessages([])} className="hover:text-zinc-600">
+            {(messages.length > 0 || error) && !busy && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMessages([]);
+                  clearError();
+                }}
+                className="hover:text-zinc-600"
+              >
                 New conversation
               </button>
             )}

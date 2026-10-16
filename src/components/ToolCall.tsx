@@ -17,7 +17,7 @@ function summarize(part: Part): string | null {
       return `${part.output.returned} of ${part.output.total_matches} matching games`;
     case "tool-aggregate_games": {
       const o = part.output;
-      if ("groups" in o && o.groups) return `${o.groups.length} groups by ${o.group_by}`;
+      if ("groups" in o && o.groups) return `${o.total_groups} groups by ${o.group_by}`;
       const v = "value" in o ? o.value : null;
       return `${o.metric}${o.field ? `(${o.field})` : ""} = ${
         v === null ? "n/a" : o.field === "monthly_revenue_usd" && o.metric !== "count" ? usd(v) : v
@@ -28,6 +28,7 @@ function summarize(part: Part): string | null {
       const extra = [
         o.not_found.length && `${o.not_found.length} not found`,
         o.ambiguous.length && `${o.ambiguous.length} ambiguous`,
+        o.duplicates.length && `${o.duplicates.length} duplicate`,
       ].filter(Boolean);
       return [`${o.found.length} found`, ...extra].join(", ");
     }

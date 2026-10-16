@@ -14,6 +14,10 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
+// Matches the server's `ORDER BY title COLLATE NOCASE, id`.
+const byTitle = (a: Game, b: Game) =>
+  a.title.toLowerCase() < b.title.toLowerCase() ? -1 : a.title.toLowerCase() > b.title.toLowerCase() ? 1 : a.id - b.id;
+
 export function GamesManager({ initialGames }: { initialGames: Game[] }) {
   const [games, setGames] = useState(initialGames);
   const [editing, setEditing] = useState<Game | null>(null);
@@ -24,11 +28,11 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
     try {
       if (editing) {
         const updated = await request<Game>(`/api/games/${editing.id}`, { method: "PATCH", body: JSON.stringify(input) });
-        setGames((gs) => gs.map((g) => (g.id === updated.id ? updated : g)));
+        setGames((gs) => gs.map((g) => (g.id === updated.id ? updated : g)).sort(byTitle));
         setEditing(null);
       } else {
         const created = await request<Game>("/api/games", { method: "POST", body: JSON.stringify(input) });
-        setGames((gs) => [...gs, created].sort((a, b) => a.title.localeCompare(b.title)));
+        setGames((gs) => [...gs, created].sort(byTitle));
       }
       return true;
     } catch (e) {

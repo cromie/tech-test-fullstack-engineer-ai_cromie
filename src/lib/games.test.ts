@@ -1,7 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createDb, type Db } from "./db";
-import { aggregateGames, compareGames, createGame, deleteGame, queryGames, updateGame } from "./games";
-import { aggregateGamesSchema, queryGamesSchema } from "./schema";
+import { aggregateGames, compareGames, createGame, deleteGame, listGames, queryGames, updateGame } from "./games";
+import { aggregateGamesSchema, gameIdSchema, MAX_RESULTS, queryGamesSchema, type GameInput } from "./schema";
+
+const game = (over: Partial<GameInput>): GameInput => ({
+  title: "X",
+  developer: "Dev",
+  genre: "Puzzle",
+  monthly_revenue_usd: 1,
+  monthly_downloads: 1,
+  average_rating: 3,
+  ...over,
+});
 
 let db: Db;
 beforeEach(() => {
@@ -58,6 +68,19 @@ describe("aggregateGames", () => {
     expect(r.value).toBe(4.15);
   });
 
+  it("returns 0 for a sum over no rows, null for avg, and no field for count", () => {
+    expect(aggregateGames(db, { metric: "sum", field: "monthly_revenue_usd", filters: { genre: "nope" } }).value).toBe(0);
+    expect(aggregateGames(db, { metric: "avg", field: "average_rating", filters: { genre: "nope" } }).value).toBeNull();
+    expect(aggregateGames(db, { metric: "count", field: "monthly_revenue_usd" }).field).toBeNull();
+  });
+
+  it("caps grouped results and reports the total", () => {
+    for (let i = 0; i < 60; i++) createGame(db, game({ title: `G${i}`, developer: `Studio ${i}` }));
+    const r = aggregateGames(db, { metric: "count", group_by: "developer" });
+    expect(r.groups).toHaveLength(MAX_RESULTS);
+    expect(r.total_groups).toBe(68); // 60 new + 8 seed developers
+  });
+
   it("requires a field for non-count metrics", () => {
     expect(aggregateGamesSchema.safeParse({ metric: "sum" }).success).toBe(false);
   });
@@ -79,6 +102,40 @@ describe("compareGames", () => {
     expect(r.found.map((g) => g.title)).toEqual(["Moonwell Farm"]);
     const amb = compareGames(db, { titles: ["Rust & Rune", "a"] });
     expect(amb.ambiguous[0].query).toBe("a");
+  });
+});
+
+describe("compareGames edge cases", () => {
+  it("reports the same game requested twice as a duplicate", () => {
+    const r = compareGames(db, { titles: ["Neon Courier", "neon"] });
+    expect(r.found).toHaveLength(1);
+    expect(r.duplicates).toEqual([{ query: "neon", same_as: "Neon Courier" }]);
+  });
+
+  it("returns ambiguous candidates with id and developer, flagging truncation", () => {
+    createGame(db, game({ title: "Twin", developer: "A" }));
+    createGame(db, game({ title: "Twin", developer: "B" }));
+    const twin = compareGames(db, { titles: ["Twin", "Rust & Rune"] }).ambiguous[0];
+    expect(twin.candidates.map((c) => c.developer)).toEqual(["A", "B"]);
+    expect(twin.truncated).toBe(false);
+    expect(compareGames(db, { titles: ["e", "Rust & Rune"] }).ambiguous[0].truncated).toBe(true);
+  });
+});
+
+describe("ordering and ids", () => {
+  it("lists case-insensitively by title", () => {
+    createGame(db, game({ title: "aardvark" }));
+    expect(listGames(db)[0].title).toBe("aardvark");
+  });
+
+  it("breaks ties by id so top-N is deterministic", () => {
+    const r = queryGames(db, { filters: { numeric: [{ field: "average_rating", op: "eq", value: 4 }] }, sort_by: "average_rating" });
+    expect(r.games.map((g) => g.title)).toEqual(["Starlit Kitchen", "Mire Keeper"]);
+  });
+
+  it("accepts only canonical positive integer ids", () => {
+    expect(gameIdSchema.safeParse("12").data).toBe(12);
+    for (const bad of ["0", "1e0", "0x3", " 3 ", "1.0", "-1", "abc"]) expect(gameIdSchema.safeParse(bad).success).toBe(false);
   });
 });
 
