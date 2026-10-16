@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GameForm } from "./GameForm";
 import { Cover, GenrePill, RevenueBar, Stars } from "./GameVisuals";
 import { StatTiles } from "./StatTiles";
@@ -27,6 +27,9 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<TableView>(DEFAULT_VIEW);
+  // Bumped when a save/delete starts and when it finishes. A refresh that started under an older
+  // value may carry a snapshot from before that change, so its response is discarded.
+  const changeVersion = useRef(0);
 
   const visible = useMemo(() => filterAndSort(games, view), [games, view]);
   const genres = useMemo(() => genresOf(games), [games]);
@@ -39,10 +42,12 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
     async function refresh() {
       if (document.visibilityState !== "visible" || inFlight) return;
       inFlight = true;
+      const startedAt = changeVersion.current;
       try {
         const res = await fetch("/api/games", { cache: "no-store" });
         if (!res.ok) return;
         const fresh: Game[] = await res.json();
+        if (changeVersion.current !== startedAt) return; // a local change overlapped: this snapshot may be stale
         setGames(fresh.sort(byTitle));
         // Keep an open edit (same id keeps the form's in-progress input); close it if the game is gone.
         setEditing((e) => (e ? (fresh.find((g) => g.id === e.id) ?? null) : null));
@@ -64,6 +69,7 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
 
   async function save(input: GameInput) {
     setError(null);
+    changeVersion.current++;
     try {
       if (editing) {
         const updated = await request<Game>(`/api/games/${editing.id}`, { method: "PATCH", body: JSON.stringify(input) });
@@ -77,11 +83,14 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
     } catch (e) {
       setError((e as Error).message);
       return false;
+    } finally {
+      changeVersion.current++;
     }
   }
 
   async function remove(game: Game) {
     setError(null);
+    changeVersion.current++;
     try {
       await request<void>(`/api/games/${game.id}`, { method: "DELETE" });
       setGames((gs) => gs.filter((g) => g.id !== game.id));
@@ -89,6 +98,7 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      changeVersion.current++;
       setConfirmingDelete(null);
     }
   }
