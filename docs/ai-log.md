@@ -28,3 +28,9 @@ Raw working log, appended per milestone. Source for AI_WORKFLOW.md. Real events 
 ## M3 — dashboard
 - **Outcome:** server page reads the DB in a `<Suspense>` + `connection()` boundary and hands the rows to a client `GamesManager` (table + create/edit/delete). The form validates with the same `gameInputSchema` as the API and shows per-field errors; API errors show in an alert box. Includes an empty state.
 - **Verify:** typecheck + lint clean; SSR HTML for `/` contains the seeded rows. CRUD behaviour is covered by the M2 smoke script; the in-browser click-through is still for me to do by hand.
+
+## M4 — streaming chat + tools
+- **Outcome:** `/api/chat` uses v7 `streamText` with `instructions`, 3 read-only tools whose `inputSchema` is the shared zod schema, `isStepCount(5)` and `maxOutputTokens: 1024`, streamed via `createUIMessageStreamResponse(toUIMessageStream(...))`, and an `onError` that masks errors. Requests go through `safeValidateUIMessages` and are rejected for system role, >30 messages or >2000 chars. `/chat` uses `useChat` and renders markdown with react-markdown (no raw HTML).
+- **AI mistakes caught before running:** (1) exported `MAX_*` constants from a route file, which Next rejects as invalid route exports; made them module-private. (2) the instructions ask for markdown tables, but react-markdown needs `remark-gfm` for tables; added it (checked maintainers on npm first).
+- **Changed:** moved the API-key check after input validation so the guards can be tested without a key.
+- **Verify (no key yet):** curl shows 400 for bad JSON, 2001-char message, injected system message and 31 messages; a valid request reaches the key check (500 "not configured"). Live answers to the 3 README questions are pending an API key.
