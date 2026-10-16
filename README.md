@@ -22,6 +22,7 @@ The SQLite database (`data/games.db`) is created and seeded with 15 fictional ga
 | `npm test` | Vitest unit tests for the query/aggregation layer |
 | `npm run typecheck` / `lint` | `tsc --noEmit` (after `next typegen`) / ESLint |
 | `scripts/smoke-api.sh [base_url]` | curl walk-through of every API route and error case |
+| `node scripts/ask.mjs "question" [base_url]` | Ask the chat from the terminal; prints tool calls + streamed answer |
 
 ## Stack
 
