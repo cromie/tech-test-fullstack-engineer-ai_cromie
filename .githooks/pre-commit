@@ -1,0 +1,9 @@
+#!/bin/sh
+# Block commits unless typecheck, lint and unit tests pass. Installed by `npm install` (prepare script).
+# Bypass only deliberately: git commit --no-verify
+set -e
+echo "pre-commit: typecheck, lint, test…"
+npm run --silent typecheck
+npm run --silent lint
+npm run --silent test
+echo "pre-commit: ok"

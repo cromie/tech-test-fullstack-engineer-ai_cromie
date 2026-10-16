@@ -25,10 +25,17 @@ describe("createRateLimiter", () => {
 });
 
 describe("clientKey", () => {
-  it("uses the first forwarded address, then x-real-ip, then a shared local bucket", () => {
-    const req = (h: Record<string, string>) => new Request("http://x", { headers: h });
-    expect(clientKey(req({ "x-forwarded-for": "1.2.3.4, 10.0.0.1" }))).toBe("1.2.3.4");
-    expect(clientKey(req({ "x-real-ip": "5.6.7.8" }))).toBe("5.6.7.8");
-    expect(clientKey(req({}))).toBe("local");
+  const req = (h: Record<string, string>) => new Request("http://x", { headers: h });
+
+  it("ignores spoofable forwarding headers by default", () => {
+    expect(clientKey(req({ "x-forwarded-for": "1.2.3.4" }), false)).toBe("global");
+    expect(clientKey(req({ "x-forwarded-for": "5.6.7.8" }), false)).toBe("global");
+    expect(clientKey(req({ "x-real-ip": "5.6.7.8" }), false)).toBe("global");
+  });
+
+  it("behind a trusted proxy, uses the first forwarded address, then x-real-ip", () => {
+    expect(clientKey(req({ "x-forwarded-for": "1.2.3.4, 10.0.0.1" }), true)).toBe("1.2.3.4");
+    expect(clientKey(req({ "x-real-ip": "5.6.7.8" }), true)).toBe("5.6.7.8");
+    expect(clientKey(req({}), true)).toBe("unknown");
   });
 });

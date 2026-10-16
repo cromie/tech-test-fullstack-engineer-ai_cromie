@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const env = vi.hoisted(() => {
   process.env.ANTHROPIC_API_KEY = "test-key";
   process.env.DATABASE_PATH = ":memory:";
+  process.env.TRUST_PROXY = "true"; // per-IP buckets keep tests independent; the default is covered below
   return { model: null as unknown };
 });
 
@@ -154,5 +155,20 @@ describe("POST /api/chat (mock model)", () => {
     expect(statuses[20]).toBe(429);
     expect(model.doStreamCalls).toHaveLength(20);
     expect((await chat([user("hi")], "203.0.113.8")).status).toBe(200); // other clients unaffected
+  });
+
+  it("by default, rotating x-forwarded-for does not bypass the limit", async () => {
+    process.env.TRUST_PROXY = "false";
+    try {
+      const statuses = [];
+      for (let i = 0; i < 21; i++) {
+        const res = await chat([user("hi")], `198.51.100.${i}`); // a new spoofed IP every time
+        statuses.push(res.status);
+        await res.text();
+      }
+      expect(statuses[20]).toBe(429);
+    } finally {
+      process.env.TRUST_PROXY = "true";
+    }
   });
 });

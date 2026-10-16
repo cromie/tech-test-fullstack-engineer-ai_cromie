@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GameForm } from "./GameForm";
 import { Cover, GenrePill, RevenueBar, Stars } from "./GameVisuals";
 import { StatTiles } from "./StatTiles";
@@ -32,6 +32,33 @@ export function GamesManager({ initialGames }: { initialGames: Game[] }) {
   const genres = useMemo(() => genresOf(games), [games]);
   const filtered = view.query.trim() !== "" || view.genre !== null;
   const sortBy = (key: SortKey) => setView((v) => ({ ...v, ...nextSort(v, key) }));
+
+  // Pick up changes made elsewhere (another tab, the API) when the user comes back to this tab.
+  useEffect(() => {
+    let inFlight = false;
+    async function refresh() {
+      if (document.visibilityState !== "visible" || inFlight) return;
+      inFlight = true;
+      try {
+        const res = await fetch("/api/games", { cache: "no-store" });
+        if (!res.ok) return;
+        const fresh: Game[] = await res.json();
+        setGames(fresh.sort(byTitle));
+        // Keep an open edit (same id keeps the form's in-progress input); close it if the game is gone.
+        setEditing((e) => (e ? (fresh.find((g) => g.id === e.id) ?? null) : null));
+      } catch {
+        // offline or server restarting: keep showing what we have
+      } finally {
+        inFlight = false;
+      }
+    }
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
 
   const maxRevenue = Math.max(0, ...games.map((g) => g.monthly_revenue_usd));
 

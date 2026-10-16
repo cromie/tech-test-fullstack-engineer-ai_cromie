@@ -22,9 +22,12 @@ export function createRateLimiter({ limit, windowMs, now = Date.now }: { limit: 
 }
 
 /**
- * Best-effort client key. x-forwarded-for is only trustworthy behind a proxy that sets it;
- * locally everyone shares one bucket, which is the safe direction to fail.
+ * Rate-limit bucket for a request. Forwarding headers are client-controlled unless a reverse proxy
+ * overwrites them, so they're ignored by default: every request shares one global bucket, and
+ * rotating a fake x-forwarded-for can't buy more requests. Set TRUST_PROXY=true only behind a proxy
+ * that sets the header.
  */
-export function clientKey(req: Request) {
-  return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || "local";
+export function clientKey(req: Request, trustProxy = process.env.TRUST_PROXY === "true") {
+  if (!trustProxy) return "global";
+  return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
 }
