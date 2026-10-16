@@ -52,7 +52,8 @@ The reviewer subagent caught all three. **Fix:** `sanitizeHistory` keeps only us
 - **Committed with typecheck failing.** My command chain ran `git commit` even though typecheck had failed. Fixed in the next commit, and turned into a guardrail: a pre-commit hook (`.githooks/pre-commit`, enabled by `npm install`) runs typecheck, lint and tests. The first version of the hook hid the error output, so it blocked *without saying why*; that's fixed too.
 - **Passed typecheck, lint and dev mode, failed `next build`.** `useChat` generates random ids during render, which Next 16 refuses to prerender. Fixed with a `<Suspense>` boundary. Lesson: build at every milestone.
 - **Raw zod text in the UI.** Empty number fields showed *"Invalid input: expected number, received string"*. Only the browser pass caught it. Fixed with friendly messages in the shared schema.
-- Smaller ones: exported constants from a route file (Next rejects that); asked the model for markdown tables without adding `remark-gfm`; reseeding without resetting AUTOINCREMENT (the smoke test created id 31).
+- **Mobile layout never checked until I asked.** Measuring at 390px showed both pages scrolling sideways: a grid item with `min-width: auto`, a flex input's minimum width, and an `sr-only` label escaping the table's scroll container. While fixing it, one edit broke the JSX, and the measurement right after looked "fixed" only because it was measuring Next's error page. Re-measured after confirming the real page had rendered.
+- Smaller ones: exported constants from a route file (Next rejects that); asked the model for markdown tables without adding `remark-gfm`; reseeding without resetting AUTOINCREMENT (the smoke test created id 31); an edit script that failed partway through while the shell still committed (caught by re-checking, then amended).
 
 **One mistake was mine, not the AI's:** I pasted an API key into the chat. The agent wrote it to the gitignored `.env` (mode 600) without echoing it, warned me it was now in the transcript, and told me to rotate it.
 
@@ -69,6 +70,6 @@ The reviewer subagent caught all three. **Fix:** `sanitizeHistory` keeps only us
 
 - A `game_monthly_metrics` table, so "last month" means a real month instead of a snapshot.
 - Server-side chat history, so follow-up questions can reuse earlier tool results safely instead of re-querying.
-- Component tests (jsdom + Testing Library) for the dashboard, especially an automated version of the refresh-race check, which is currently a repeatable manual script.
+- UI tests: component tests (jsdom + Testing Library) for the dashboard, including an automated version of the refresh-race check, and a Playwright check that no page scrolls sideways at 390px. Both are currently repeatable manual browser scripts.
 - Running the live evals in CI on a schedule with a budget cap, plus more cases (ties, empty genres, multi-turn follow-ups).
 - A shared rate-limit store (e.g. Redis) and auth, if this were ever deployed.

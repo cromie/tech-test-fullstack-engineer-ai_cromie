@@ -122,7 +122,7 @@ The model never sees the whole table, only what a tool returns.
 - **Follow-up questions re-query.** Because earlier tool results from the client are dropped (see Security), the model runs its tools again when it needs data. That's safer but costs a little extra latency and tokens. Keeping chat history on the server would remove this cost.
 - **Dashboard state is client-side.** It refreshes on tab focus, not live (no websockets).
 - **SQLite with a startup `CREATE TABLE IF NOT EXISTS`** instead of migrations. Zero setup, fine for a local tool.
-- **Testing:** unit and route tests cover the data layer and the chat route's safety. Live evals check model behaviour separately, because they need the key and cost money. There are no UI component or browser tests; UI flows were checked by hand in Chrome.
+- **Testing:** unit and route tests cover the data layer and the chat route's safety. Live evals check model behaviour separately, because they need the key and cost money. There are no UI component or browser tests. UI flows, the refresh race and the 390px mobile layout were checked by hand in Chrome; those checks aren't automated.
 - **Dark theme only.**
 
 ## Time spent
